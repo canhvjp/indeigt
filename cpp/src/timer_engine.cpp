@@ -297,6 +297,12 @@ void SimulatedInGameTimer::snap_from_record(const json::Value& record, int64_t o
         completed_rta_ = final_rta;
         set_exact_igt(final_igt, record_date);
     } else {
+        if (is_completed_) {
+            is_completed_ = false;
+            if (status_ == TimerStatus::COMPLETED_LEGACY) {
+                status_ = TimerStatus::RUNNING;
+            }
+        }
         if (is_playing() && ts > record_date) {
             set_exact_igt(final_igt, record_date);
             advance_simulated_ticks(ts);
@@ -330,14 +336,9 @@ void SimulatedInGameTimer::snap_from_event(const std::string& event_id, int64_t 
         set_exact_igt(raw_igt_ms, ts);
     }
 
-    if (event_id.size() >= 8 && event_id.compare(event_id.size() - 8, 8, ".credits") == 0) {
-        is_completed_ = true;
-        status_ = TimerStatus::COMPLETED_LEGACY;
-        end_time_ = ts;
-        completed_igt_ = raw_igt_ms;
-        completed_retimed_igt_ = retimed_igt_ms;
-        completed_rta_ = rta_ms;
-    }
+    // Do NOT mark run completed on "rsg.credits" here:
+    // SpeedRunIGT logs rsg.credits for ALL categories (including All Advancements, All Bosses, Custom, etc.).
+    // Authoritative completion for ANY SpeedRunIGT category comes from speedrunigt/record.json ("is_completed": true).
 
     last_snap_.source = "events.log (" + event_id + ")";
     last_snap_.timestamp_ms = ts;

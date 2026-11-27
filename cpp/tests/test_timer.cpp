@@ -65,6 +65,29 @@ static void test_timer_math_and_snapping() {
     assert(t.get_real_time_attack(25058) == 15000);
     assert(t.get_retimed_in_game_time(25058) == 14200);
     assert(t.get_in_game_time(false, 25058) == 13300);
+
+    // Non-Any% category (e.g. ALL_ADVANCEMENTS): rsg.credits MUST NOT mark run completed!
+    SimulatedInGameTimer aa;
+    aa.on_world_enter(L"C:\\mc\\saves\\aa1", L"aa1", 1000);
+    aa.set_pause(false, TimerStatus::PAUSED, 2000);
+    json::Value aa_pause;
+    assert(json::parse(
+        R"({"date":62000,"final_igt":59000,"final_rta":60000,"retimed_igt":59000,"is_completed":false,"category":"ALL_ADVANCEMENTS","run_type":"random_seed","world_name":"aa1"})",
+        aa_pause));
+    aa.snap_from_record(aa_pause, 62005);
+    aa.snap_from_event("rsg.credits", 600000, 580000, 602000);
+    assert(!aa.is_completed());
+    assert(aa.status() == TimerStatus::RUNNING);
+    assert(aa.get_in_game_time(false, 602000) == 580000);
+    // Only record.json with is_completed=true completes the run
+    json::Value aa_done;
+    assert(json::parse(
+        R"({"date":9002000,"final_igt":8500123,"final_rta":9000000,"retimed_igt":8500123,"is_completed":true,"category":"ALL_ADVANCEMENTS","run_type":"random_seed","world_name":"aa1"})",
+        aa_done));
+    aa.snap_from_record(aa_done, 9002010);
+    assert(aa.is_completed());
+    assert(aa.status() == TimerStatus::COMPLETED_LEGACY);
+    assert(aa.get_in_game_time(true, 9999999) == 8500123);
 }
 
 static void test_aatool_cmdline_parsing() {

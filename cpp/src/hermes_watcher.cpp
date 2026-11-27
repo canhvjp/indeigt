@@ -137,16 +137,6 @@ bool is_loading_screen(const json::Value* screen) {
     return false;
 }
 
-bool is_credits_screen(const json::Value* screen) {
-    if (!screen || !screen->is_object()) return false;
-    const auto* cls_v = screen->get("class");
-    if (!cls_v || !cls_v->is_string()) return false;
-    const std::string& cls = cls_v->str_val;
-    return cls.find("class_445") != std::string::npos ||
-           cls.find("CreditsScreen") != std::string::npos ||
-           cls.find("WinScreen") != std::string::npos;
-}
-
 bool is_wall_or_title_screen(const json::Value* screen) {
     if (!screen || !screen->is_object()) return false;
     const auto* cls_v = screen->get("class");
@@ -403,10 +393,6 @@ void HermesSpeedRunWatcher::apply_hermes_state(const json::Value& state, int64_t
 
     if (world_path != current_world_path_) {
         switch_world(world_path, ts);
-    }
-
-    if (is_credits_screen(screen)) {
-        return; // Wait for record.json completion snap
     }
 
     bool has_screen_class = screen && screen->is_object() && screen->get("class") && screen->get("class")->is_string() && !screen->get("class")->str_val.empty();

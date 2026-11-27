@@ -630,9 +630,10 @@ void SettingsWindow::update_status_text() {
     wchar_t buf[512];
     std::swprintf(
         buf, 512,
-        L"Instance: %ls  |  Status: %ls\nGameDir: %ls\nWorld: %ls  |  Last Snap: %ls (IGT %+lldms, RTA %+lldms)",
+        L"Instance: %ls  |  Status: %ls (%ls)\nGameDir: %ls\nWorld: %ls  |  Last Snap: %ls (IGT %+lldms, RTA %+lldms)",
         watcher_.connected_source().c_str(),
         status_name(timer_.status()),
+        utf8_to_wide_s(timer_.category()).c_str(),
         gdir.c_str(),
         world.c_str(),
         utf8_to_wide_s(snap.source).c_str(),
